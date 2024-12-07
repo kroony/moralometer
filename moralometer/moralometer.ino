@@ -99,8 +99,15 @@ void calculate() {
   }
 }
 
-void trackLightsOverTime(int delayTime) {
-  
+void sweepLEDsOverTime(int totalTime, bool direction, byte r, byte g, byte b) {
+  int stepsPerLED = stepsPerRevolution / NUMPIXELS;
+  for(int i = 0; i < NUMPIXELS; i++) {
+    
+    pixels.setPixelColor(i, pixels.Color(r, g, b));
+    pixels.show();
+    myStepper.step(stepsPerLED * direction);
+    delay(totalTime / NUMPIXELS);
+  }
 }
 
 void displayResults() {
