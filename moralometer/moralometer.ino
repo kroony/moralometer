@@ -110,7 +110,7 @@ void sweepLEDsOverTime(int totalTime, bool direction, byte r, byte g, byte b) {
       pixels.setPixelColor(NUMPIXELS - i, pixels.Color(r, g, b));
     }
     pixels.show();
-    myStepper.step(stepsPerLED * direction == true ? 1 : -1);
+    myStepper.step(direction == true ? stepsPerLED : -stepsPerLED);
     delay(totalTime / NUMPIXELS);
   }
 }
