@@ -21,11 +21,9 @@ Stepper myStepper(stepsPerRevolution, 8, 10, 9, 11);
 
 // Add a global variable for the analog pin and reading
 const int analogPin = A0;
+const int analogMaxValue = 850;
 int analogInput = 0;
-  // TODO: check the pins for button and red and green LEDs and adjust as needed
 const int buttonPin = 2;
-const int redPin = 12;
-const int greenPin = 13;
 
 byte idleFrameCount = 0;
 
@@ -93,50 +91,32 @@ int takeReading() {
 
 void calculate() {
   // For five seconds we tell the stepper motor to wiggle back and forth, lights to flash, and buzzer to beep
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 5; i++) {
     myStepper.step(stepsPerRevolution);
-    flashLightsAndDelay(500);
+    trackLightsOverTime(500);
     myStepper.step(-stepsPerRevolution);
-    flashLightsAndDelay(500);
+    trackLightsOverTime(500);
   }
 }
 
-void flashLightsAndDelay(int delayTime) {
-  // Alternate the red and green LEDs four times over the delay time
-  int interval = delayTime / 8; // 4 alternations = 8 LED changes
+void trackLightsOverTime(int delayTime) {
   
-  // Loop 4 times to alternate LEDs
-  for(int i = 0; i < 4; i++) {
-    digitalWrite(redPin, HIGH);   // Red on
-    digitalWrite(greenPin, LOW);  // Green off
-    delay(interval);
-    
-    digitalWrite(redPin, LOW);    // Red off
-    digitalWrite(greenPin, HIGH); // Green on 
-    delay(interval);
-  }
 }
 
 void displayResults() {
-  // Map sensor value (0-1023) to steps (-500 to 500)
-  int steps = map(analogInput, 0, 1023, -stepsPerRevolution, stepsPerRevolution);
+  // Map sensor value (0-analogMaxValue) to steps (-500 to 500)
+  int steps = map(analogInput, 0, analogMaxValue, -stepsPerRevolution, stepsPerRevolution);
   
   // Move stepper to position based on sensor reading
   myStepper.step(steps);
   
-  // Randomly choose between red and green
+  // Randomly choose between red and green for the LEDs
   // GOLD PLATING IDEA: play a sound based on the sensor reading
   if(random(2) == 0) {
-    digitalWrite(redPin, HIGH);  // Red LED on
-    digitalWrite(greenPin, LOW);   // Green LED off
   } else {
-    digitalWrite(redPin, LOW);   // Red LED off 
-    digitalWrite(greenPin, HIGH);  // Green LED on
   }
   
   delay(3000);  // Show result for 3 seconds
   
-  // Turn off both LEDs
-  digitalWrite(12, LOW);
-  digitalWrite(13, LOW);
+  // Turn off the LEDs
 }
