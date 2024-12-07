@@ -94,13 +94,14 @@ void calculate() {
   // For five seconds we tell the stepper motor to wiggle back and forth, lights to flash, and buzzer to beep
   for (byte i = 0; i < 3; i++) {
     myStepper.step(stepsPerRevolution);
-    trackLightsOverTime(500, true, 255, 0, 0);
+    sweepLEDsOverTime(500, true, 255, 0, 0);
     myStepper.step(-stepsPerRevolution);
-    trackLightsOverTime(500, false, 255, 0, 0);
+    sweepLEDsOverTime(500, false, 255, 0, 0);
   }
 }
 
 void sweepLEDsOverTime(int totalTime, bool direction, byte r, byte g, byte b) {
+  // We will want to update each LED one at a time, and tell the stepper motor to move
   int stepsPerLED = stepsPerRevolution / NUMPIXELS;
   for(int i = 0; i < NUMPIXELS; i++) {
     setLEDsSolidColour(0, 0, 0);
