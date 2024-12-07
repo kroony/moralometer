@@ -20,10 +20,10 @@ const int stepsPerRevolution = 500;  // change this to fit the number of steps p
 Stepper myStepper(stepsPerRevolution, 8, 10, 9, 11);
 
 // Add a global variable for the analog pin and reading
-const int analogPin = A0;
+const byte analogPin = A0;
 const int analogMaxValue = 850;
 int analogInput = 0;
-const int buttonPin = 2;
+const byte buttonPin = 2;
 
 byte idleFrameCount = 0;
 
@@ -34,6 +34,7 @@ void setup() {
   Serial.begin(9600);
 
   pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
+  pixels.setBrightness(50); //0 - 255
 }
 
 void loop() {
@@ -91,7 +92,7 @@ int takeReading() {
 
 void calculate() {
   // For five seconds we tell the stepper motor to wiggle back and forth, lights to flash, and buzzer to beep
-  for (int i = 0; i < 5; i++) {
+  for (byte i = 0; i < 3; i++) {
     myStepper.step(stepsPerRevolution);
     trackLightsOverTime(500);
     myStepper.step(-stepsPerRevolution);
@@ -122,8 +123,20 @@ void displayResults() {
   if(random(2) == 0) {
   } else {
   }
+
+  //set strip to red yellow or blue 
+  if(analogInput < 340) { setLEDsSolidColour(255, 0, 0); }
+  else if (analogInput >= 340 && analogInput < 680) { setLEDsSolidColour(255, 255, 0); }
+  else { setLEDsSolidColour(0, 255, 0); }
   
   delay(3000);  // Show result for 3 seconds
-  
-  // Turn off the LEDs
+}
+
+void setLEDsSolidColour(byte r, byte g, byte b)
+{
+  for(int i = 0; i< NUMPIXELS; i++)
+  {
+    pixels.setPixelColor(i, pixels.Color(r, g, b));
+  }
+  pixels.show();
 }
