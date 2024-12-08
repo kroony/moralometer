@@ -25,6 +25,7 @@ const int analogMaxValue = 850;
 int analogInput = 0;
 const byte buttonPin = 2;
 const byte stepperZeroPin = 3;
+const byte moralityInverterSwitchPin = 4;
 
 byte idleFrameCount = 0;
 
@@ -36,6 +37,13 @@ void setup() {
 
   pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
   pixels.setBrightness(50); //0 - 255
+
+  // Enable internal pullup resistors for the buttons
+  pinMode(stepperZeroPin, INPUT_PULLUP);
+  pinMode(buttonPin, INPUT_PULLUP);
+
+  // Enable toggle switches for morality inversion
+  pinMode(moralityInverterSwitchPin, INPUT_PULLUP);
 
   sendStepperToZero();
 }
@@ -61,7 +69,6 @@ void loop() {
 }
 
 void sendStepperToZero() {
-  pinMode(stepperZeroPin, INPUT_PULLUP);  // Enable internal pullup resistor
   
   // Keep stepping backwards until we hit the zero switch
   while(digitalRead(stepperZeroPin) == HIGH) {
@@ -88,8 +95,6 @@ void sendStepperToCenter() {
 
 int takeReading() {
   // Continue taking readings every 100ms until button press
-  pinMode(buttonPin, INPUT_PULLUP);  // Enable internal pullup resistor
-  
   while(digitalRead(buttonPin) == HIGH) {  // Read until button is pressed (LOW)
     delay(100);  // Wait 100ms between readings
     idleFrameCount++;
@@ -146,16 +151,28 @@ void sweepLEDsOverTime(int totalTime, bool direction, byte r, byte g, byte b) {
 }
 
 void displayResults() {
-  // Map sensor value (0-analogMaxValue) to steps (0 to 500)
-  int steps = map(analogInput, 0, analogMaxValue, 0, stepperMaxPosition);
+  // Map sensor value (0-analogMaxValue) to naughty/middle/nice (0 to 2)
+  byte moralityResult = map(analogInput, 0, analogMaxValue, 0, 2);
+  // Invert morality if the switch is toggled
+  if(digitalRead(moralityInverterSwitchPin) == LOW) {
+    moralityResult = 2 - moralityResult;
+  }
   
-  // Move stepper to position based on sensor reading
-  stepStepperSafely(steps);
-  
-  //set strip to red yellow or blue 
-  if(analogInput < 340) { setLEDsSolidColour(255, 0, 0); }
-  else if (analogInput >= 340 && analogInput < 680) { setLEDsSolidColour(255, 255, 0); }
-  else { setLEDsSolidColour(0, 255, 0); }
+  // Naughty
+  if(moralityResult == 0) {
+    setLEDsSolidColour(255, 0, 0);
+    stepStepperSafely(-stepperMaxPosition);
+  }
+  // Middle
+  else if (moralityResult == 1) {
+    setLEDsSolidColour(255, 255, 0);
+    sendStepperToCenter();
+  }
+  // Nice
+  else {
+    setLEDsSolidColour(0, 255, 0);
+    stepStepperSafely(stepperMaxPosition);
+  }
   
   delay(3000);  // Show result for 3 seconds
 }
