@@ -13,17 +13,18 @@ Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS 21 // Popular NeoPixel ring size
 
-const int stepsPerRevolution = 500;  // change this to fit the number of steps per revolution
-// for your motor
+const int stepperMaxPosition = 500;  // change this to fit the number of steps per revolution
+int stepperCurrentPosition = 0;
 
 // initialize the stepper library on pins 8 through 11:
-Stepper myStepper(stepsPerRevolution, 8, 10, 9, 11);
+Stepper myStepper(stepperMaxPosition, 8, 10, 9, 11);
 
 // Add a global variable for the analog pin and reading
 const byte analogPin = A0;
 const int analogMaxValue = 850;
 int analogInput = 0;
 const byte buttonPin = 2;
+const byte stepperZeroPin = 3;
 
 byte idleFrameCount = 0;
 
@@ -35,6 +36,8 @@ void setup() {
 
   pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
   pixels.setBrightness(50); //0 - 255
+
+  sendStepperToZero();
 }
 
 void loop() {
@@ -54,6 +57,28 @@ void loop() {
 
   // Enter "results" mode
   displayResults();
+}
+
+void sendStepperToZero() {
+  pinMode(stepperZeroPin, INPUT_PULLUP);  // Enable internal pullup resistor
+  
+  // Keep stepping backwards until we hit the zero switch
+  while(digitalRead(stepperZeroPin) == HIGH) {
+    myStepper.step(-1);
+  }
+  
+  stepperCurrentPosition = 0;  // Reset position counter once we're at zero
+}
+
+void stepStepperSafely(int steps) {
+  if (steps < 0) {
+    myStepper.step(stepperCurrentPosition + steps < 0 ? -stepperCurrentPosition : steps);
+    stepperCurrentPosition += stepperCurrentPosition + steps < 0 ? -stepperCurrentPosition : steps;
+  }
+  else if (steps > 0) {
+    myStepper.step(stepperCurrentPosition + steps > stepperMaxPosition ? stepperMaxPosition - stepperCurrentPosition : steps);
+    stepperCurrentPosition += stepperCurrentPosition + steps > stepperMaxPosition ? stepperMaxPosition - stepperCurrentPosition : steps;
+  }
 }
 
 int takeReading() {
@@ -100,7 +125,7 @@ void calculate() {
 
 void sweepLEDsOverTime(int totalTime, bool direction, byte r, byte g, byte b) {
   // We will want to update each LED one at a time, and tell the stepper motor to move enough steps to move to the next LED
-  int stepsPerLED = stepsPerRevolution / NUMPIXELS;
+  int stepsPerLED = stepperMaxPosition / NUMPIXELS;
   for(int i = 0; i < NUMPIXELS; i++) {
     setLEDsSolidColour(0, 0, 0);
     if (direction) {
@@ -110,17 +135,17 @@ void sweepLEDsOverTime(int totalTime, bool direction, byte r, byte g, byte b) {
       pixels.setPixelColor(NUMPIXELS - i, pixels.Color(r, g, b));
     }
     pixels.show();
-    myStepper.step(direction == true ? stepsPerLED : -stepsPerLED);
+    stepStepperSafely(direction == true ? stepsPerLED : -stepsPerLED);
     delay(totalTime / NUMPIXELS);
   }
 }
 
 void displayResults() {
   // Map sensor value (0-analogMaxValue) to steps (-500 to 500)
-  int steps = map(analogInput, 0, analogMaxValue, -stepsPerRevolution, stepsPerRevolution);
+  int steps = map(analogInput, 0, analogMaxValue, -stepperMaxPosition, stepperMaxPosition);
   
   // Move stepper to position based on sensor reading
-  myStepper.step(steps);
+  stepStepperSafely(steps);
   
   // Randomly choose between red and green for the LEDs
   // GOLD PLATING IDEA: play a sound based on the sensor reading
