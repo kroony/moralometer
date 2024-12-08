@@ -13,7 +13,7 @@ Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS 21 // Popular NeoPixel ring size
 
-const int stepperMaxPosition = 500;  // change this to fit the number of steps per revolution
+const int stepperMaxPosition = 500;  // change this to fit the number of steps per half-revolution
 int stepperCurrentPosition = 0;
 
 // initialize the stepper library on pins 8 through 11:
@@ -146,18 +146,12 @@ void sweepLEDsOverTime(int totalTime, bool direction, byte r, byte g, byte b) {
 }
 
 void displayResults() {
-  // Map sensor value (0-analogMaxValue) to steps (-500 to 500)
-  int steps = map(analogInput, 0, analogMaxValue, -stepperMaxPosition, stepperMaxPosition);
+  // Map sensor value (0-analogMaxValue) to steps (0 to 500)
+  int steps = map(analogInput, 0, analogMaxValue, 0, stepperMaxPosition);
   
   // Move stepper to position based on sensor reading
   stepStepperSafely(steps);
   
-  // Randomly choose between red and green for the LEDs
-  // GOLD PLATING IDEA: play a sound based on the sensor reading
-  if(random(2) == 0) {
-  } else {
-  }
-
   //set strip to red yellow or blue 
   if(analogInput < 340) { setLEDsSolidColour(255, 0, 0); }
   else if (analogInput >= 340 && analogInput < 680) { setLEDsSolidColour(255, 255, 0); }
