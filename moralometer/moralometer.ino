@@ -48,6 +48,7 @@ void loop() {
     else { pixels.setPixelColor(i, pixels.Color(0, 100, 0)); } // odds green
   }
   pixels.show();   // Send the updated pixel colors to the hardware.
+  sendStepperToCenter();
   
   // Get sensor reading
   analogInput = takeReading();
@@ -79,6 +80,10 @@ void stepStepperSafely(int steps) {
     myStepper.step(stepperCurrentPosition + steps > stepperMaxPosition ? stepperMaxPosition - stepperCurrentPosition : steps);
     stepperCurrentPosition += stepperCurrentPosition + steps > stepperMaxPosition ? stepperMaxPosition - stepperCurrentPosition : steps;
   }
+}
+
+void sendStepperToCenter() {
+  stepStepperSafely((stepperMaxPosition / 2) - stepperCurrentPosition);
 }
 
 int takeReading() {
