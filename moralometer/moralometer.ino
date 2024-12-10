@@ -6,14 +6,14 @@
 #endif
 
 // Which pin on the Arduino is connected to the NeoPixels?
-#define PIN        6 // On Trinket or Gemma, suggest changing this to 1
-#define NUMPIXELS 21 //
+#define PIN        5 // On Trinket or Gemma, suggest changing this to 1
+#define NUMPIXELS 42 //
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 // How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS 21 // Popular NeoPixel ring size
 
-const int stepperMaxPosition = 500;  // change this to fit the number of steps per half-revolution
+
+const int stepperMaxPosition = 700;  // change this to fit the number of steps per half-revolution
 int stepperCurrentPosition = 0;
 
 // initialize the stepper library on pins 8 through 11:
@@ -23,20 +23,20 @@ Stepper myStepper(stepperMaxPosition, 8, 10, 9, 11);
 const byte analogPin = A0;
 const int analogMaxValue = 850;
 int analogInput = 0;
-const byte buttonPin = 2;
-const byte stepperZeroPin = 3;
-const byte moralityInverterSwitchPin = 4;
+const byte buttonPin = 6;
+const byte stepperZeroPin = 4;
+const byte moralityInverterSwitchPin = 3;
 
 byte idleFrameCount = 0;
 
 void setup() {
   // set the speed at 20 rpm:
-  myStepper.setSpeed(50);
+  myStepper.setSpeed(38);
   // initialize the serial port:
   Serial.begin(9600);
 
   pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
-  pixels.setBrightness(50); //0 - 255
+  pixels.setBrightness(25); //0 - 255
 
   // Enable internal pullup resistors for the buttons
   pinMode(stepperZeroPin, INPUT_PULLUP);
@@ -108,7 +108,7 @@ int takeReading() {
       }
       pixels.show();
     }
-    else if(idleFrameCount == 5)
+    else if(idleFrameCount == 3)
     {
       for(int i = 0; i< NUMPIXELS; i++)
       {
@@ -139,10 +139,10 @@ void sweepLEDsOverTime(int totalTime, bool direction, byte r, byte g, byte b) {
   for(int i = 0; i < NUMPIXELS; i++) {
     setLEDsSolidColour(0, 0, 0);
     if (direction) {
-      pixels.setPixelColor(i, pixels.Color(r, g, b));
+      pixels.setPixelColor(NUMPIXELS - i, pixels.Color(map(i,0,NUMPIXELS,0,255), map(NUMPIXELS-i,0,NUMPIXELS,0,255), 0));
     }
     else {
-      pixels.setPixelColor(NUMPIXELS - i, pixels.Color(r, g, b));
+      pixels.setPixelColor(i, pixels.Color(map(NUMPIXELS-i,0,NUMPIXELS,0,255), map(i,0,NUMPIXELS,0,255), b));
     }
     pixels.show();
     stepStepperSafely(direction == true ? stepsPerLED : -stepsPerLED);
@@ -158,9 +158,9 @@ void displayResults() {
     moralityResult = 2 - moralityResult;
   }
   
-  // Naughty
+  // Nice
   if(moralityResult == 0) {
-    setLEDsSolidColour(255, 0, 0);
+    setLEDsSolidColour(0, 255, 0);
     stepStepperSafely(-stepperMaxPosition);
   }
   // Middle
@@ -168,9 +168,9 @@ void displayResults() {
     setLEDsSolidColour(255, 255, 0);
     sendStepperToCenter();
   }
-  // Nice
+  // Naughty
   else {
-    setLEDsSolidColour(0, 255, 0);
+    setLEDsSolidColour(255, 0, 0);
     stepStepperSafely(stepperMaxPosition);
   }
   
